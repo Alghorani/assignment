@@ -1,0 +1,1637 @@
+<?php 
+	include ('cityserver.php');
+	
+	//fetch record to be updated
+	if (isset($_GET['edit'])) {
+	    $ID = $_GET['edit'];
+	   
+        $edit_state = true;
+	    $rec = mysqli_query($db, "SELECT * FROM City WHERE ID='".$ID."'") 
+	        or die("Error: ".mysqli_error($db));
+	    
+	    $record = mysqli_fetch_array($rec);
+	    $ID = $record['ID'];
+	    $CityName = $record['CityName'];
+	    $CountryCode = $record['CountryCode'];
+	    $District = $record['District'];		
+	    $Population = $record['Population'];
+	}
+?>
+
+<!DOCTYPE html>
+<html>
+	<head>
+	    <style>
+	        .msg {
+                margin: 30px auto;
+                padding: 10px;
+                border-radius: 5px;
+                color: #3c763d;
+                background: #dff0d8;
+                border: 1px solid #3c763d;
+                width: 50%;
+                text-align: center;
+                
+	        }
+	        
+            .edit_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #2E8B57;
+            }
+
+            .del_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #800000;
+            }
+	    </style>
+		<title>City Database</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="header_stylesheet.css" rel="stylesheet" type="text/css">
+		<script src="header.js"></script>
+	</head>
+	<body>
+	     <div class="header" id="myTopnav" >
+        	<a href="home.php" class="logo" style="color:#b8b6b4">World Database</a>
+			<a href="country.php">Country</a>
+			<a href="city.php">City</a>
+			<a href="language.php">Language</a>
+			<a href="contact.php">Contact</a>
+            <a href="#">About</a>
+			<a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
+		</div>
+	    
+	    <?php if (isset($_SESSION['msg'])): ?>
+	        <div class="msg">
+	            <?php
+	                echo $_SESSION['msg'];
+	                unset($_SESSION['msg']);
+	            ?>
+            </div>
+	    <?php endif ?>
+	    
+		<form method="post" action="cityserver.php"> 
+		<input type="hidden" name="ID" value="<?php echo $ID; ?>">
+			<div class="input-group">
+				<label>City Name</label>
+				<input type="text" name="CityName" value="<?php echo $CityName; ?>">
+			</div>
+			<div class="input-group">
+				<label>Country Code</label>
+				<input type="text" name="CountryCode" maxlength="3" value="<?php echo $CountryCode; ?>">
+			</div>
+			<div class="input-group">
+				<label>District</label>
+				<input type="text" name="District" value="<?php echo $District; ?>">
+			</div>
+			<div class="input-group">
+				<label>Population</label>
+				<input type="number" name="Population" value="<?php echo $Population; ?>">
+			</div>
+		
+			<div class="input-group">
+			    <?php if ($edit_state == false): ?>
+			        <button type="submit" name="save" class="btn">Save</button>
+			    <?php else: ?>
+			        <button type="submit" name="update" class="btn">Update</button>
+			    <?php endif ?>
+			</div>
+		</form>
+		
+		<div style="overflow-x:auto;">
+    		<table>
+    			<thead>
+    				<tr>
+						<th>City Name</th>
+    					<th>Country Code</th>
+    					<th>District</th>
+    					<th>Population</th>
+    					<th colspan="4">Action</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    			    <?php
+    			        while ($row = mysqli_fetch_array($results)) { 
+    			    ?>
+    			            <tr>
+    		                    <td><?php echo $row['CityName']; ?></td>
+    					        <td><?php echo $row['CountryCode']; ?></td>
+    		                    <td><?php echo $row['District']; ?></td>
+    		                    <td><?php echo $row['Population']; ?></td>
+    				        	<td>
+    				        		<a class="edit_btn" href="city.php?edit=<?php echo $row['ID']; ?>">Edit</a    >
+    				        	</td>
+    					        <td>
+    				        		<a class="del_btn" href="cityserver.php?del=<?php echo $row['ID']; ?>">Delete</a>
+    				        	</td>
+    			           	</tr>   
+                    <?php } ?>
+    			</tbody>
+    		</table>
+    	</div>
+	</body>
+</html>
+<?php	
+    session_start();
+	//connect to database
+	$db = mysqli_connect('localhost', 'id9285368_worldassignment', 'gogo3210123', 'id9285368_world');
+	
+	//initialize variable
+	$CityName = "";
+	$CountryCode = "";
+	$District= "";
+	$Population = 0;
+	$ID = 0;
+	
+	$edit_state = false;
+	
+	//if save button is clicked
+	if (isset($_POST['save']))
+	{
+		$CityName = $_POST['CityName'];
+		$CountryCode = $_POST['CountryCode'];
+		$District = $_POST['District'];
+		$Population = $_POST['Population'];
+		
+	// insert from form to database
+		$query = "INSERT INTO City (CityName, CountryCode, District, Population) VALUES ('$CityName','$CountryCode','$District','$Population');";
+		
+		mysqli_query($db, $query);
+		$_SESSION['msg'] = "Record Saved!";
+		header('location: city.php'); //redirect to index page after save
+	}
+	
+	//update records
+	if (isset($_POST['update'])) {
+	    $CityName = mysqli_real_escape_string($db,$_POST['CityName']);
+	    $CountryCode = mysqli_real_escape_string($db,$_POST['CountryCode']);
+	    $District = mysqli_real_escape_string($db,$_POST['District']);
+	    $Population = mysqli_real_escape_string($db,$_POST['Population']);
+	    $ID = mysqli_real_escape_string($db,$_POST['ID']);
+	   
+	    mysqli_query($db, "UPDATE City SET CityName='$CityName', CountryCode='$CountryCode', District='$District', Population='$Population' WHERE ID='$ID' ");
+	   	$_SESSION['msg'] = "Record Updated!"; 
+	   	header('location: city.php'); //redirect to index page after update
+	}
+	
+	//delete records
+	if (isset($_GET['del'])) {
+	    $ID = $_GET['del'];
+	    
+	    mysqli_query($db, "DELETE FROM City WHERE ID='".$ID."' ")
+	     or die("Error: ".mysqli_error($db));
+	    $_SESSION['msg'] = "Record Deleted!"; 
+	   	header('location: city.php'); //redirect to index page after update
+	}
+	
+	//retrieve records
+	$results = mysqli_query($db, "SELECT * FROM City");
+?>
+<!DOCTYPE html>
+<html>
+	<head>
+	<title>My title</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="header_stylesheet.css" rel="stylesheet" type="text/css">
+		<script src="header.js"></script>
+	</head>
+	<body>
+	     <div class="header" id="myTopnav" >
+        	<a href="home.php" class="logo" style="color:#b8b6b4">World Database</a>
+			<a href="country.php">Country</a>
+			<a href="city.php">City</a>
+			<a href="language.php">Language</a>
+			<a href="contact.php">Contact</a>
+            <a href="#">About</a>
+			<a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
+		</div>
+		
+		<div style="overflow-x:auto;">
+    		<table>
+    			<thead>
+    				<tr>
+						<th>Name</th>
+    					<th>Student ID</th>
+						<th>OWA</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    			            <tr>
+    		                    <td>Xenah Cabahug</td>
+    					        <td>20015589</td>
+    		                    <td>hfyxc2</td>
+    			           	</tr> 
+
+							<tr>
+    		                    <td>Ghorani</td>
+    					        <td>20016684</td>
+    		                    <td>hfyma1</td>
+    			           	</tr>
+							
+							<tr>
+    		                    <td>Omar Samy</td>
+    					        <td>10234518</td>
+    		                    <td>hfyoa1</td>
+    			           	</tr>
+							
+							<tr>
+    		                    <td>Shenuka</td>
+    					        <td>20104552</td>
+    		                    <td>hcysh1</td>
+    			           	</tr>
+							
+							<tr>
+    		                    <td>Ameena Vaseem</td>
+    					        <td>20117188</td>
+    		                    <td>hcyav1</td>
+    			           	</tr>
+    			</tbody>
+    		</table>
+    	</div>
+	</body>
+</html>
+<?php 
+	include ('countryserver.php');
+	
+	//fetch record to be updated
+	if (isset($_GET['edit'])) {
+	    $CountryCode = $_GET['edit'];
+	   
+        $edit_state = true;
+	    $rec = mysqli_query($db, "SELECT * FROM country WHERE CountryCode='".$CountryCode."'") 
+	        or die("Error: ".mysqli_error($db));
+	    
+	    $record = mysqli_fetch_array($rec);
+	    $CountryCode = $record['CountryCode'];
+	    $CountryName = $record['CountryName'];
+	    $Continent = $record['Continent'];
+	    $Region = $record['Region'];
+	    $SurfaceArea = $record['SurfaceArea'];
+	    $IndependenceYear = $record['IndependenceYear'];
+	    $Population = $record['Population'];
+	    $LifeExpectancy = $record['LifeExpectancy'];
+	    $GNP = $record['GNP'];
+	    $OldGNP = $record['OldGNP'];
+	    $LocalName = $record['LocalName'];
+	    $GovernmentForm = $record['GovernmentForm'];
+	    $HeadofState = $record['HeadofState'];
+	    $Capital = $record['Capital'];
+	    $TwoDigitCountryCode = $record['TwoDigitCountryCode'];
+	}
+?>
+
+<!DOCTYPE html>
+<html>
+	<head>
+	    <style>
+	        .msg {
+                margin: 30px auto;
+                padding: 10px;
+                border-radius: 5px;
+                color: #3c763d;
+                background: #dff0d8;
+                border: 1px solid #3c763d;
+                width: 50%;
+                text-align: center;
+                
+	        }
+	        
+            .edit_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #2E8B57;
+            }
+
+            .del_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #800000;
+            }
+	    </style>
+		<title>My title</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="header_stylesheet.css" rel="stylesheet" type="text/css">
+		<script src="header.js"></script>
+	</head>
+	<body>
+	     <div class="header" id="myTopnav" >
+        	<a href="home.php" class="logo" style="color:#b8b6b4">World Database</a>
+			<a href="country.php">Country</a>
+			<a href="city.php">City</a>
+			<a href="language.php">Language</a>
+			<a href="contact.php">Contact</a>
+            <a href="#">About</a>
+			<a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
+		</div>
+	    
+	    <?php if (isset($_SESSION['msg'])): ?>
+	        <div class="msg">
+	            <?php
+	                echo $_SESSION['msg'];
+	                unset($_SESSION['msg']);
+	            ?>
+            </div>
+	    <?php endif ?>
+	    
+		<form method="post" action="countryserver.php"> 
+			<div class="input-group">
+				<label>Country Code</label>
+				<input type="text" name="CountryCode" maxlength="3" value="<?php echo $CountryCode;?>">
+			</div>
+			<div class="input-group">
+				<label>Country Name</label>
+				<input type="text" name="CountryName" value="<?php echo $CountryName;?>">
+			</div>
+			<div class="input-group">
+				<label>Continent</label>
+				<input type="text" name="Continent" value="<?php echo $Continent;?>">
+			</div>
+			<div class="input-group">
+				<label>Region</label>
+				<input type="text" name="Region" value="<?php echo $Region;?>">
+			</div>
+			<div class="input-group">
+				<label>Surface Area</label>
+				<input type="number" name="SurfaceArea" value="<?php echo $SurfaceArea;?>">
+			</div>
+			<div class="input-group">
+				<label>Independence Year</label>
+				<input type="number" name="IndependenceYear" maxlength="4" value="<?php echo $IndependenceYear;?>">
+			</div>
+			<div class="input-group">
+				<label>Population</label>
+				<input type="number" name="Population" value="<?php echo $Population;?>">
+			</div>
+			<div class="input-group">
+				<label>Life Expectancy</label>
+				<input type="number" name="LifeExpectancy" step="0.1" value="<?php echo $LifeExpectancy;?>">
+			</div>
+			<div class="input-group">
+				<label>GNP</label>
+				<input type="number" name="GNP" value="<?php echo $GNP;?>">
+			</div>
+			<div class="input-group">
+				<label>Old GNP</label>
+				<input type="number" name="OldGNP" value="<?php echo $OldGNP;?>">
+			</div>
+			<div class="input-group">
+				<label>Local Name</label>
+				<input type="text" name="LocalName" value="<?php echo $LocalName;?>">
+			</div>
+			<div class="input-group">
+				<label>Government Form</label>
+				<input type="text" name="GovernmentForm" value="<?php echo $GovernmentForm;?>">
+			</div>
+			<div class="input-group">
+				<label>Head of State</label>
+				<input type="text" name="HeadofState" value="<?php echo $HeadofState;?>">
+			</div>
+			<div class="input-group">
+				<label>Capital</label>
+				<input type="number" name="Capital" value="<?php echo $Capital;?>">
+			</div>
+			<div class="input-group">
+				<label>Two Digit Country Code</label>
+				<input type="text" name="TwoDigitCountryCode" maxlength="2" value="<?php echo $TwoDigitCountryCode;?>">
+			</div>
+			<div class="input-group">
+			    <?php if ($edit_state == false): ?>
+			        <button type="submit" name="save" class="btn">Save</button>
+			    <?php else: ?>
+			        <button type="submit" name="update" class="btn">Update</button>
+			    <?php endif ?>
+			</div>
+		</form>
+		
+		<div style="overflow-x:auto;">
+    		<table>
+    			<thead>
+    				<tr>
+    					<th>Country Code</th>
+    					<th>Country Name</th>
+    					<th>Continent</th>
+    					<th>Region</th>
+    					<th>Surface Area</th>
+    					<th>Independence Year</th>
+    					<th>Population</th>
+    					<th>Life Expectancy</th>
+    					<th>GNP</th>
+    					<th>Old GNP</th>
+    					<th>Local Name</th>
+    					<th>Government Form</th>
+    					<th>Head of State</th>
+    					<th>Capital</th>
+    					<th>Two Digit Country Code</th>
+    					<th colspan="15">Action</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    			    <?php
+    			        while ($row = mysqli_fetch_array($results)) { 
+    			    ?>
+    			    
+    			            <tr>
+    					        <td><?php echo $row['CountryCode']; ?></td>
+    		                    <td><?php echo $row['CountryName']; ?></td>
+    		                    <td><?php echo $row['Continent']; ?></td>
+    		                    <td><?php echo $row['Region']; ?></td>
+    		                    <td><?php echo $row['SurfaceArea']; ?></td>
+    		                    <td><?php echo $row['IndependenceYear']; ?></td>
+    		                    <td><?php echo $row['Population']; ?></td>
+    		                    <td><?php echo $row['LifeExpectancy']; ?></td>
+    		                    <td><?php echo $row['GNP']; ?></td>
+    		                    <td><?php echo $row['OldGNP']; ?></td>
+    		                    <td><?php echo $row['LocalName']; ?></td>
+    		                    <td><?php echo $row['GovernmentForm']; ?></td>
+    		                    <td><?php echo $row['HeadofState']; ?></td>
+    		                    <td><?php echo $row['Capital']; ?></td>
+    		                    <td><?php echo $row['TwoDigitCountryCode']; ?></td>
+    				        	<td>
+    				        		<a class="edit_btn" href="country.php?edit=<?php echo $row['CountryCode']; ?>">Edit</a    >
+    				        	</td>
+    					        <td>
+    				        		<a class="del_btn" href="countryserver.php?del=<?php echo $row['CountryCode']; ?>">Delete</a>
+    				        	</td>
+    			           	</tr>   
+                    <?php } ?>
+    			</tbody>
+    		</table>
+    	</div>
+	</body>
+</html>
+<?php 
+	include ('countryserver.php');
+	
+	//fetch record to be updated
+	if (isset($_GET['edit'])) {
+	    $CountryCode = $_GET['edit'];
+	   
+        $edit_state = true;
+	    $rec = mysqli_query($db, "SELECT * FROM country WHERE CountryCode='".$CountryCode."'") 
+	        or die("Error: ".mysqli_error($db));
+	    
+	    $record = mysqli_fetch_array($rec);
+	    $CountryCode = $record['CountryCode'];
+	    $CountryName = $record['CountryName'];
+	    $Continent = $record['Continent'];
+	    $Region = $record['Region'];
+	    $SurfaceArea = $record['SurfaceArea'];
+	    $IndependenceYear = $record['IndependenceYear'];
+	    $Population = $record['Population'];
+	    $LifeExpectancy = $record['LifeExpectancy'];
+	    $GNP = $record['GNP'];
+	    $OldGNP = $record['OldGNP'];
+	    $LocalName = $record['LocalName'];
+	    $GovernmentForm = $record['GovernmentForm'];
+	    $HeadofState = $record['HeadofState'];
+	    $Capital = $record['Capital'];
+	    $TwoDigitCountryCode = $record['TwoDigitCountryCode'];
+	}
+?>
+
+<!DOCTYPE html>
+<html>
+	<head>
+	    <style>
+	        .msg {
+                margin: 30px auto;
+                padding: 10px;
+                border-radius: 5px;
+                color: #3c763d;
+                background: #dff0d8;
+                border: 1px solid #3c763d;
+                width: 50%;
+                text-align: center;
+                
+	        }
+	        
+            .edit_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #2E8B57;
+            }
+
+            .del_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #800000;
+            }
+	    </style>
+		<title>My title</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="header_stylesheet.css" rel="stylesheet" type="text/css">
+		<script src="header.js"></script>
+	</head>
+	<body>
+	     <div class="header" id="myTopnav" >
+        	<a href="home.php" class="logo" style="color:#b8b6b4">World Database</a>
+			<a href="country.php">Country</a>
+			<a href="city.php">City</a>
+			<a href="language.php">Language</a>
+			<a href="contact.php">Contact</a>
+            <a href="#">About</a>
+			<a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
+		</div>
+	    
+	    <?php if (isset($_SESSION['msg'])): ?>
+	        <div class="msg">
+	            <?php
+	                echo $_SESSION['msg'];
+	                unset($_SESSION['msg']);
+	            ?>
+            </div>
+	    <?php endif ?>
+	    
+		<form method="post" action="countryserver.php"> 
+			<div class="input-group">
+				<label>Country Code</label>
+				<input type="text" name="CountryCode" maxlength="3" value="<?php echo $CountryCode;?>">
+			</div>
+			<div class="input-group">
+				<label>Country Name</label>
+				<input type="text" name="CountryName" value="<?php echo $CountryName;?>">
+			</div>
+			<div class="input-group">
+				<label>Continent</label>
+				<input type="text" name="Continent" value="<?php echo $Continent;?>">
+			</div>
+			<div class="input-group">
+				<label>Region</label>
+				<input type="text" name="Region" value="<?php echo $Region;?>">
+			</div>
+			<div class="input-group">
+				<label>Surface Area</label>
+				<input type="number" name="SurfaceArea" value="<?php echo $SurfaceArea;?>">
+			</div>
+			<div class="input-group">
+				<label>Independence Year</label>
+				<input type="number" name="IndependenceYear" maxlength="4" value="<?php echo $IndependenceYear;?>">
+			</div>
+			<div class="input-group">
+				<label>Population</label>
+				<input type="number" name="Population" value="<?php echo $Population;?>">
+			</div>
+			<div class="input-group">
+				<label>Life Expectancy</label>
+				<input type="number" name="LifeExpectancy" step="0.1" value="<?php echo $LifeExpectancy;?>">
+			</div>
+			<div class="input-group">
+				<label>GNP</label>
+				<input type="number" name="GNP" value="<?php echo $GNP;?>">
+			</div>
+			<div class="input-group">
+				<label>Old GNP</label>
+				<input type="number" name="OldGNP" value="<?php echo $OldGNP;?>">
+			</div>
+			<div class="input-group">
+				<label>Local Name</label>
+				<input type="text" name="LocalName" value="<?php echo $LocalName;?>">
+			</div>
+			<div class="input-group">
+				<label>Government Form</label>
+				<input type="text" name="GovernmentForm" value="<?php echo $GovernmentForm;?>">
+			</div>
+			<div class="input-group">
+				<label>Head of State</label>
+				<input type="text" name="HeadofState" value="<?php echo $HeadofState;?>">
+			</div>
+			<div class="input-group">
+				<label>Capital</label>
+				<input type="number" name="Capital" value="<?php echo $Capital;?>">
+			</div>
+			<div class="input-group">
+				<label>Two Digit Country Code</label>
+				<input type="text" name="TwoDigitCountryCode" maxlength="2" value="<?php echo $TwoDigitCountryCode;?>">
+			</div>
+			<div class="input-group">
+			    <?php if ($edit_state == false): ?>
+			        <button type="submit" name="save" class="btn">Save</button>
+			    <?php else: ?>
+			        <button type="submit" name="update" class="btn">Update</button>
+			    <?php endif ?>
+			</div>
+		</form>
+		
+		<div style="overflow-x:auto;">
+    		<table>
+    			<thead>
+    				<tr>
+    					<th>Country Code</th>
+    					<th>Country Name</th>
+    					<th>Continent</th>
+    					<th>Region</th>
+    					<th>Surface Area</th>
+    					<th>Independence Year</th>
+    					<th>Population</th>
+    					<th>Life Expectancy</th>
+    					<th>GNP</th>
+    					<th>Old GNP</th>
+    					<th>Local Name</th>
+    					<th>Government Form</th>
+    					<th>Head of State</th>
+    					<th>Capital</th>
+    					<th>Two Digit Country Code</th>
+    					<th colspan="15">Action</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    			    <?php
+    			        while ($row = mysqli_fetch_array($results)) { 
+    			    ?>
+    			    
+    			            <tr>
+    					        <td><?php echo $row['CountryCode']; ?></td>
+    		                    <td><?php echo $row['CountryName']; ?></td>
+    		                    <td><?php echo $row['Continent']; ?></td>
+    		                    <td><?php echo $row['Region']; ?></td>
+    		                    <td><?php echo $row['SurfaceArea']; ?></td>
+    		                    <td><?php echo $row['IndependenceYear']; ?></td>
+    		                    <td><?php echo $row['Population']; ?></td>
+    		                    <td><?php echo $row['LifeExpectancy']; ?></td>
+    		                    <td><?php echo $row['GNP']; ?></td>
+    		                    <td><?php echo $row['OldGNP']; ?></td>
+    		                    <td><?php echo $row['LocalName']; ?></td>
+    		                    <td><?php echo $row['GovernmentForm']; ?></td>
+    		                    <td><?php echo $row['HeadofState']; ?></td>
+    		                    <td><?php echo $row['Capital']; ?></td>
+    		                    <td><?php echo $row['TwoDigitCountryCode']; ?></td>
+    				        	<td>
+    				        		<a class="edit_btn" href="country.php?edit=<?php echo $row['CountryCode']; ?>">Edit</a    >
+    				        	</td>
+    					        <td>
+    				        		<a class="del_btn" href="countryserver.php?del=<?php echo $row['CountryCode']; ?>">Delete</a>
+    				        	</td>
+    			           	</tr>   
+                    <?php } ?>
+    			</tbody>
+    		</table>
+    	</div>
+	</body>
+</html>
+<?php 
+	include ('countryserver.php');
+	
+	//fetch record to be updated
+	if (isset($_GET['edit'])) {
+	    $CountryCode = $_GET['edit'];
+	   
+        $edit_state = true;
+	    $rec = mysqli_query($db, "SELECT * FROM country WHERE CountryCode='".$CountryCode."'") 
+	        or die("Error: ".mysqli_error($db));
+	    
+	    $record = mysqli_fetch_array($rec);
+	    $CountryCode = $record['CountryCode'];
+	    $CountryName = $record['CountryName'];
+	    $Continent = $record['Continent'];
+	    $Region = $record['Region'];
+	    $SurfaceArea = $record['SurfaceArea'];
+	    $IndependenceYear = $record['IndependenceYear'];
+	    $Population = $record['Population'];
+	    $LifeExpectancy = $record['LifeExpectancy'];
+	    $GNP = $record['GNP'];
+	    $OldGNP = $record['OldGNP'];
+	    $LocalName = $record['LocalName'];
+	    $GovernmentForm = $record['GovernmentForm'];
+	    $HeadofState = $record['HeadofState'];
+	    $Capital = $record['Capital'];
+	    $TwoDigitCountryCode = $record['TwoDigitCountryCode'];
+	}
+?>
+
+<!DOCTYPE html>
+<html>
+	<head>
+	    <style>
+	        .msg {
+                margin: 30px auto;
+                padding: 10px;
+                border-radius: 5px;
+                color: #3c763d;
+                background: #dff0d8;
+                border: 1px solid #3c763d;
+                width: 50%;
+                text-align: center;
+                
+	        }
+	        
+            .edit_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #2E8B57;
+            }
+
+            .del_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #800000;
+            }
+	    </style>
+		<title>My title</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="header_stylesheet.css" rel="stylesheet" type="text/css">
+		<script src="header.js"></script>
+	</head>
+	<body>
+	     <div class="header" id="myTopnav" >
+        	<a href="home.php" class="logo" style="color:#b8b6b4">World Database</a>
+			<a href="country.php">Country</a>
+			<a href="city.php">City</a>
+			<a href="language.php">Language</a>
+			<a href="contact.php">Contact</a>
+            <a href="#">About</a>
+			<a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
+		</div>
+	    
+	    <?php if (isset($_SESSION['msg'])): ?>
+	        <div class="msg">
+	            <?php
+	                echo $_SESSION['msg'];
+	                unset($_SESSION['msg']);
+	            ?>
+            </div>
+	    <?php endif ?>
+	    
+		<form method="post" action="countryserver.php"> 
+			<div class="input-group">
+				<label>Country Code</label>
+				<input type="text" name="CountryCode" maxlength="3" value="<?php echo $CountryCode;?>">
+			</div>
+			<div class="input-group">
+				<label>Country Name</label>
+				<input type="text" name="CountryName" value="<?php echo $CountryName;?>">
+			</div>
+			<div class="input-group">
+				<label>Continent</label>
+				<input type="text" name="Continent" value="<?php echo $Continent;?>">
+			</div>
+			<div class="input-group">
+				<label>Region</label>
+				<input type="text" name="Region" value="<?php echo $Region;?>">
+			</div>
+			<div class="input-group">
+				<label>Surface Area</label>
+				<input type="number" name="SurfaceArea" value="<?php echo $SurfaceArea;?>">
+			</div>
+			<div class="input-group">
+				<label>Independence Year</label>
+				<input type="number" name="IndependenceYear" maxlength="4" value="<?php echo $IndependenceYear;?>">
+			</div>
+			<div class="input-group">
+				<label>Population</label>
+				<input type="number" name="Population" value="<?php echo $Population;?>">
+			</div>
+			<div class="input-group">
+				<label>Life Expectancy</label>
+				<input type="number" name="LifeExpectancy" step="0.1" value="<?php echo $LifeExpectancy;?>">
+			</div>
+			<div class="input-group">
+				<label>GNP</label>
+				<input type="number" name="GNP" value="<?php echo $GNP;?>">
+			</div>
+			<div class="input-group">
+				<label>Old GNP</label>
+				<input type="number" name="OldGNP" value="<?php echo $OldGNP;?>">
+			</div>
+			<div class="input-group">
+				<label>Local Name</label>
+				<input type="text" name="LocalName" value="<?php echo $LocalName;?>">
+			</div>
+			<div class="input-group">
+				<label>Government Form</label>
+				<input type="text" name="GovernmentForm" value="<?php echo $GovernmentForm;?>">
+			</div>
+			<div class="input-group">
+				<label>Head of State</label>
+				<input type="text" name="HeadofState" value="<?php echo $HeadofState;?>">
+			</div>
+			<div class="input-group">
+				<label>Capital</label>
+				<input type="number" name="Capital" value="<?php echo $Capital;?>">
+			</div>
+			<div class="input-group">
+				<label>Two Digit Country Code</label>
+				<input type="text" name="TwoDigitCountryCode" maxlength="2" value="<?php echo $TwoDigitCountryCode;?>">
+			</div>
+			<div class="input-group">
+			    <?php if ($edit_state == false): ?>
+			        <button type="submit" name="save" class="btn">Save</button>
+			    <?php else: ?>
+			        <button type="submit" name="update" class="btn">Update</button>
+			    <?php endif ?>
+			</div>
+		</form>
+		
+		<div style="overflow-x:auto;">
+    		<table>
+    			<thead>
+    				<tr>
+    					<th>Country Code</th>
+    					<th>Country Name</th>
+    					<th>Continent</th>
+    					<th>Region</th>
+    					<th>Surface Area</th>
+    					<th>Independence Year</th>
+    					<th>Population</th>
+    					<th>Life Expectancy</th>
+    					<th>GNP</th>
+    					<th>Old GNP</th>
+    					<th>Local Name</th>
+    					<th>Government Form</th>
+    					<th>Head of State</th>
+    					<th>Capital</th>
+    					<th>Two Digit Country Code</th>
+    					<th colspan="15">Action</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    			    <?php
+    			        while ($row = mysqli_fetch_array($results)) { 
+    			    ?>
+    			    
+    			            <tr>
+    					        <td><?php echo $row['CountryCode']; ?></td>
+    		                    <td><?php echo $row['CountryName']; ?></td>
+    		                    <td><?php echo $row['Continent']; ?></td>
+    		                    <td><?php echo $row['Region']; ?></td>
+    		                    <td><?php echo $row['SurfaceArea']; ?></td>
+    		                    <td><?php echo $row['IndependenceYear']; ?></td>
+    		                    <td><?php echo $row['Population']; ?></td>
+    		                    <td><?php echo $row['LifeExpectancy']; ?></td>
+    		                    <td><?php echo $row['GNP']; ?></td>
+    		                    <td><?php echo $row['OldGNP']; ?></td>
+    		                    <td><?php echo $row['LocalName']; ?></td>
+    		                    <td><?php echo $row['GovernmentForm']; ?></td>
+    		                    <td><?php echo $row['HeadofState']; ?></td>
+    		                    <td><?php echo $row['Capital']; ?></td>
+    		                    <td><?php echo $row['TwoDigitCountryCode']; ?></td>
+    				        	<td>
+    				        		<a class="edit_btn" href="country.php?edit=<?php echo $row['CountryCode']; ?>">Edit</a    >
+    				        	</td>
+    					        <td>
+    				        		<a class="del_btn" href="countryserver.php?del=<?php echo $row['CountryCode']; ?>">Delete</a>
+    				        	</td>
+    			           	</tr>   
+                    <?php } ?>
+    			</tbody>
+    		</table>
+    	</div>
+	</body>
+</html>
+
+
+
+
+<?php 
+	include ('countryserver.php');
+	
+	//fetch record to be updated
+	if (isset($_GET['edit'])) {
+	    $CountryCode = $_GET['edit'];
+	   
+        $edit_state = true;
+	    $rec = mysqli_query($db, "SELECT * FROM country WHERE CountryCode='".$CountryCode."'") 
+	        or die("Error: ".mysqli_error($db));
+	    
+	    $record = mysqli_fetch_array($rec);
+	    $CountryCode = $record['CountryCode'];
+	    $CountryName = $record['CountryName'];
+	    $Continent = $record['Continent'];
+	    $Region = $record['Region'];
+	    $SurfaceArea = $record['SurfaceArea'];
+	    $IndependenceYear = $record['IndependenceYear'];
+	    $Population = $record['Population'];
+	    $LifeExpectancy = $record['LifeExpectancy'];
+	    $GNP = $record['GNP'];
+	    $OldGNP = $record['OldGNP'];
+	    $LocalName = $record['LocalName'];
+	    $GovernmentForm = $record['GovernmentForm'];
+	    $HeadofState = $record['HeadofState'];
+	    $Capital = $record['Capital'];
+	    $TwoDigitCountryCode = $record['TwoDigitCountryCode'];
+	}
+?>
+
+<!DOCTYPE html>
+<html>
+	<head>
+	    <style>
+	        .msg {
+                margin: 30px auto;
+                padding: 10px;
+                border-radius: 5px;
+                color: #3c763d;
+                background: #dff0d8;
+                border: 1px solid #3c763d;
+                width: 50%;
+                text-align: center;
+                
+	        }
+	        
+            .edit_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #2E8B57;
+            }
+
+            .del_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #800000;
+            }
+	    </style>
+		<title>My title</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="header_stylesheet.css" rel="stylesheet" type="text/css">
+		<script src="header.js"></script>
+	</head>
+	<body>
+	     <div class="header" id="myTopnav" >
+        	<a href="home.php" class="logo" style="color:#b8b6b4">World Database</a>
+			<a href="country.php">Country</a>
+			<a href="city.php">City</a>
+			<a href="language.php">Language</a>
+			<a href="contact.php">Contact</a>
+            <a href="#">About</a>
+			<a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
+		</div>
+	    
+	    <?php if (isset($_SESSION['msg'])): ?>
+	        <div class="msg">
+	            <?php
+	                echo $_SESSION['msg'];
+	                unset($_SESSION['msg']);
+	            ?>
+            </div>
+	    <?php endif ?>
+	    
+		<form method="post" action="countryserver.php"> 
+			<div class="input-group">
+				<label>Country Code</label>
+				<input type="text" name="CountryCode" maxlength="3" value="<?php echo $CountryCode;?>">
+			</div>
+			<div class="input-group">
+				<label>Country Name</label>
+				<input type="text" name="CountryName" value="<?php echo $CountryName;?>">
+			</div>
+			<div class="input-group">
+				<label>Continent</label>
+				<input type="text" name="Continent" value="<?php echo $Continent;?>">
+			</div>
+			<div class="input-group">
+				<label>Region</label>
+				<input type="text" name="Region" value="<?php echo $Region;?>">
+			</div>
+			<div class="input-group">
+				<label>Surface Area</label>
+				<input type="number" name="SurfaceArea" value="<?php echo $SurfaceArea;?>">
+			</div>
+			<div class="input-group">
+				<label>Independence Year</label>
+				<input type="number" name="IndependenceYear" maxlength="4" value="<?php echo $IndependenceYear;?>">
+			</div>
+			<div class="input-group">
+				<label>Population</label>
+				<input type="number" name="Population" value="<?php echo $Population;?>">
+			</div>
+			<div class="input-group">
+				<label>Life Expectancy</label>
+				<input type="number" name="LifeExpectancy" step="0.1" value="<?php echo $LifeExpectancy;?>">
+			</div>
+			<div class="input-group">
+				<label>GNP</label>
+				<input type="number" name="GNP" value="<?php echo $GNP;?>">
+			</div>
+			<div class="input-group">
+				<label>Old GNP</label>
+				<input type="number" name="OldGNP" value="<?php echo $OldGNP;?>">
+			</div>
+			<div class="input-group">
+				<label>Local Name</label>
+				<input type="text" name="LocalName" value="<?php echo $LocalName;?>">
+			</div>
+			<div class="input-group">
+				<label>Government Form</label>
+				<input type="text" name="GovernmentForm" value="<?php echo $GovernmentForm;?>">
+			</div>
+			<div class="input-group">
+				<label>Head of State</label>
+				<input type="text" name="HeadofState" value="<?php echo $HeadofState;?>">
+			</div>
+			<div class="input-group">
+				<label>Capital</label>
+				<input type="number" name="Capital" value="<?php echo $Capital;?>">
+			</div>
+			<div class="input-group">
+				<label>Two Digit Country Code</label>
+				<input type="text" name="TwoDigitCountryCode" maxlength="2" value="<?php echo $TwoDigitCountryCode;?>">
+			</div>
+			<div class="input-group">
+			    <?php if ($edit_state == false): ?>
+			        <button type="submit" name="save" class="btn">Save</button>
+			    <?php else: ?>
+			        <button type="submit" name="update" class="btn">Update</button>
+			    <?php endif ?>
+			</div>
+		</form>
+		
+		<div style="overflow-x:auto;">
+    		<table>
+    			<thead>
+    				<tr>
+    					<th>Country Code</th>
+    					<th>Country Name</th>
+    					<th>Continent</th>
+    					<th>Region</th>
+    					<th>Surface Area</th>
+    					<th>Independence Year</th>
+    					<th>Population</th>
+    					<th>Life Expectancy</th>
+    					<th>GNP</th>
+    					<th>Old GNP</th>
+    					<th>Local Name</th>
+    					<th>Government Form</th>
+    					<th>Head of State</th>
+    					<th>Capital</th>
+    					<th>Two Digit Country Code</th>
+    					<th colspan="15">Action</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    			    <?php
+    			        while ($row = mysqli_fetch_array($results)) { 
+    			    ?>
+    			    
+    			            <tr>
+    					        <td><?php echo $row['CountryCode']; ?></td>
+    		                    <td><?php echo $row['CountryName']; ?></td>
+    		                    <td><?php echo $row['Continent']; ?></td>
+    		                    <td><?php echo $row['Region']; ?></td>
+    		                    <td><?php echo $row['SurfaceArea']; ?></td>
+    		                    <td><?php echo $row['IndependenceYear']; ?></td>
+    		                    <td><?php echo $row['Population']; ?></td>
+    		                    <td><?php echo $row['LifeExpectancy']; ?></td>
+    		                    <td><?php echo $row['GNP']; ?></td>
+    		                    <td><?php echo $row['OldGNP']; ?></td>
+    		                    <td><?php echo $row['LocalName']; ?></td>
+    		                    <td><?php echo $row['GovernmentForm']; ?></td>
+    		                    <td><?php echo $row['HeadofState']; ?></td>
+    		                    <td><?php echo $row['Capital']; ?></td>
+    		                    <td><?php echo $row['TwoDigitCountryCode']; ?></td>
+    				        	<td>
+    				        		<a class="edit_btn" href="country.php?edit=<?php echo $row['CountryCode']; ?>">Edit</a    >
+    				        	</td>
+    					        <td>
+    				        		<a class="del_btn" href="countryserver.php?del=<?php echo $row['CountryCode']; ?>">Delete</a>
+    				        	</td>
+    			           	</tr>   
+                    <?php } ?>
+    			</tbody>
+    		</table>
+    	</div>
+	</body>
+</html>
+<?php	
+    session_start();
+	//connect to database
+	$db = mysqli_connect('localhost', 'id9285368_worldassignment', 'gogo3210123', 'id9285368_world');
+	
+	//initialize variable
+	$CountryCode = "";
+	$CountryName = "";
+	$Continent = "";
+	$Region = "";
+	$SurfaceArea = 0;
+	$IndependenceYear = 0;
+	$Population = 0;
+	$LifeExpectancy = 0;
+	$GNP = 0;
+	$OldGNP = 0;
+	$LocalName = "";
+	$GovernmentForm = "";
+	$HeadofState = "";
+	$Capital = 0;
+	$TwoDigitCountryCode = "";
+	
+	$edit_state = false;
+	
+	//if save button is clicked
+	if (isset($_POST['save']))
+	{
+		$CountryCode = $_POST['CountryCode'];
+		$CountryName = $_POST['CountryName'];
+		$Continent = $_POST['Continent'];
+		$Region = $_POST['Region'];
+		$SurfaceArea = $_POST['SurfaceArea'];
+		$IndependenceYear = $_POST['IndependenceYear'];
+		$Population = $_POST['Population'];
+		$LifeExpectancy = $_POST['LifeExpectancy'];
+		$GNP = $_POST['GNP'];
+		$OldGNP = $_POST['OldGNP'];
+		$LocalName = $_POST['LocalName'];
+		$GovernmentForm = $_POST['GovernmentForm'];
+		$HeadofState = $_POST['HeadofState'];
+		$Capital = $_POST['Capital'];
+		$TwoDigitCountryCode = $_POST['TwoDigitCountryCode'];
+		
+		
+	// insert from form to database
+		$query = "INSERT INTO country (CountryCode, CountryName, Continent, Region, SurfaceArea, IndependenceYear, Population, LifeExpectancy, GNP, OldGNP, LocalName, GovernmentForm, HeadofState, Capital, TwoDigitCountryCode) VALUES ('$CountryCode','$CountryName','$Continent','$Region','$SurfaceArea','$IndependenceYear','$Population','$LifeExpectancy','$GNP','$OldGNP','$LocalName','$GovernmentForm','$HeadofState','$Capital','$TwoDigitCountryCode');";
+		
+		mysqli_query($db, $query);
+		$_SESSION['msg'] = "Record Saved!";
+		header('location: country.php'); //redirect to index page after save
+	}
+	
+	//update records
+	if (isset($_POST['update'])) {
+	    $CountryCode = mysqli_real_escape_string($db,$_POST['CountryCode']);
+	    $CountryName = mysqli_real_escape_string($db,$_POST['CountryName']);
+	    $Continent = mysqli_real_escape_string($db,$_POST['Continent']);
+	    $Region= mysqli_real_escape_string($db,$_POST['Region']);
+	    $SurfaceArea = mysqli_real_escape_string($db,$_POST['SurfaceArea']);
+	    $IndependenceYear = mysqli_real_escape_string($db,$_POST['IndependenceYear']);
+	    $Population = mysqli_real_escape_string($db,$_POST['Population']);
+	    $LifeExpectancy = mysqli_real_escape_string($db,$_POST['LifeExpectancy']);
+	    $GNP = mysqli_real_escape_string($db,$_POST['GNP']);
+	    $OldGNP = mysqli_real_escape_string($db,$_POST['OldGNP']);
+	    $LocalName = mysqli_real_escape_string($db,$_POST['LocalName']);
+	    $GovernmentForm = mysqli_real_escape_string($db,$_POST['GovernmentForm']);
+	    $HeadofState = mysqli_real_escape_string($db,$_POST['HeadofState']);
+	    $Capital = mysqli_real_escape_string($db,$_POST['Capital']);
+	    $TwoDigitCountryCode = mysqli_real_escape_string($db,$_POST['TwoDigitCountryCode']);
+	    
+	    mysqli_query($db, "UPDATE country SET CountryCode='$CountryCode', CountryName='$CountryName', Continent='$Continent', Region='$Region', SurfaceArea='$SurfaceArea', IndependenceYear='$IndependenceYear', Population='$Population', LifeExpectancy='$LifeExpectancy', GNP='$GNP', OldGNP='$OldGNP', LocalName='$LocalName', GovernmentForm='$GovernmentForm', HeadofState='$HeadofState', Capital='$Capital', TwoDigitCountryCode='$TwoDigitCountryCode' WHERE CountryCode='$CountryCode' ");
+	   	$_SESSION['msg'] = "Record Updated!"; 
+	   	header('location: country.php'); //redirect to index page after update
+	}
+	
+	//delete records
+	if (isset($_GET['del'])) {
+	    $CountryCode = $_GET['del'];
+	    
+	    mysqli_query($db, "DELETE FROM country WHERE CountryCode='".$CountryCode."' ")
+	     or die("Error: ".mysqli_error($db));
+	    $_SESSION['msg'] = "Record Deleted!"; 
+	   	header('location: country.php'); //redirect to index page after update
+	}
+	
+	//retrieve records
+	$results = mysqli_query($db, "SELECT * FROM country");
+?>
+// JavaScript Document
+function myFunction() {
+   				var x = document.getElementById("myTopnav");
+    			if (x.className === "header") {
+        			x.className += " responsive";
+    				} 
+				else {
+        			x.className = "header";
+    				}
+				}
+        @charset "utf-8";
+/* CSS Document */
+
+/*body of document*/
+body {
+	margin: 0;
+	font-family:Arial, Helvetica, sans-serif;
+}
+
+/*Style header with green background and some padding*/
+.header {
+	overflow: hidden;
+	background-color:#00FFEF;
+	padding: 20px 10px;
+}
+
+/*Style the header links*/
+.header a{
+	float:left;
+	color:#000;
+	text-align:center;
+	text-decoration: none;
+	text-transform:uppercase;
+	font-size:15px;
+	font-weight:normal;
+	padding:15px 7px 0px 7px;
+	}
+
+/*Hide the link that opens and closes the header on small screen*/
+.header .icon {
+	display:none;
+	
+	}
+
+/*Style header logo*/
+.header a.logo {
+	font-size: 30px;
+	font-weight: bold;
+}
+	
+
+
+/*Add color on header links and the dropdown button on hover*/
+.header a:hover{
+	color: white;
+	cursor:pointer;
+	}
+	
+/*When screen is less than __ pixels wide, it hides all links, except for first one ("Steam"). Shows link (.icon) to the header links when it is opened.*/
+@media screen and (max-width: 800px) {
+		.header a:not(:first-child) {
+			display:none;
+			}
+		
+		.header a.icon {
+			float: right;
+			display:block;
+		}
+	}
+	
+@media screen and (max-width: 1000px) {
+		.header.responsive {
+			position:relative;
+			}
+			
+		.header.responsive .icon {
+			position:absolute;
+			right: 0;
+   			top: 0;
+			}
+			
+		.header.responsive a {
+			float:none;
+			display:block;
+			text-align:left;
+			}
+
+	}
+  {box-sizing: border-box;}
+.column {
+  float: left;
+  width: 20%;
+  padding: 10px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+h1 {
+	padding-left:px;
+	font-style: italic;
+	font-size: 40px;
+	text-align:center;
+}
+
+ul {
+	text-align:center;
+	list-style-type:none;
+	font-size: 50px;
+	padding-left:150px;
+	padding-right:140px;
+}
+
+/*Add color on header links and the dropdown button on hover*/
+ul:hover, li:hover{
+	color: #00FFEF;
+	cursor:pointer;
+	}
+
+li {
+	color:#000;
+	text-align:center;
+}
+
+@media screen and (min-width: 601px) {
+  h1, ul {
+    font-size: 40px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  h1, ul {
+    font-size: 10px;
+  }
+}
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset = "UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="header_stylesheet.css" rel="stylesheet" type="text/css">
+		<link href="home.css" rel="stylesheet" type="text/css">
+		<script src="header.js"></script>
+		<title>World Database</title>
+	</head>
+	<body>
+		<div class="header" id="myTopnav" >
+        	<a href="home.php" class="logo" style="color:#b8b6b4">World Database</a>
+		    <a href="country.php">Country</a>
+		    <a href="city.php">City</a>
+		    <a href="language.php">Language</a>
+			<a href="contact.php">Contact</a>
+            <a href="#">About</a>
+			<a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
+		</div>
+		<h1> Choose a database </h1>
+		<ul>
+			<a href="country.php" style="text-decoration:none">
+			<li>Country</li> </a>
+			<hr>
+			<a href="city.php" style="text-decoration:none">
+			<li>City</li></a>
+			<hr>
+			<a href="language.php" style="text-decoration:none">
+			<li>Language</li></a>
+		</ul>
+	</body>
+</html>
+<?php 
+	include ('languageserver.php');
+	
+	//fetch record to be updated
+	if (isset($_GET['edit'])) {
+	    $ID = $_GET['edit'];
+	   
+        $edit_state = true;
+	    $rec = mysqli_query($db, "SELECT * FROM Language WHERE ID='".$ID."'") 
+	        or die("Error: ".mysqli_error($db));
+	    
+	    $record = mysqli_fetch_array($rec);
+	    $ID = $record['ID'];
+	    $CountryCode = $record['CountryCode'];
+	    $Language = $record['Language'];
+	    $Official = $record['Official'];		
+	    $Percentage = $record['Percentage'];
+	}
+?>
+
+<!DOCTYPE html>
+<html>
+	<head>
+	    <style>
+	        .msg {
+                margin: 30px auto;
+                padding: 10px;
+                border-radius: 5px;
+                color: #3c763d;
+                background: #dff0d8;
+                border: 1px solid #3c763d;
+                width: 50%;
+                text-align: center;
+                
+	        }
+	        
+            .edit_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #2E8B57;
+            }
+
+            .del_btn {
+                text-decoration: none;
+                padding: 2px 5px;
+                color: white;
+                border-radius: 3px;
+                background: #800000;
+            }
+	    </style>
+		<title>My title</title>
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="header_stylesheet.css" rel="stylesheet" type="text/css">
+		<script src="header.js"></script>
+	</head>
+	<body>
+	     <div class="header" id="myTopnav" >
+        	<a href="home.php" class="logo" style="color:#b8b6b4">World Database</a>
+			<a href="country.php">Country</a>
+			<a href="city.php">City</a>
+			<a href="language.php">Language</a>
+			<a href="contact.php">Contact</a>
+            <a href="#">About</a>
+			<a href="javascript:void(0);" style="font-size:15px;" class="icon" onclick="myFunction()">&#9776;</a>
+		</div>
+	    
+	    <?php if (isset($_SESSION['msg'])): ?>
+	        <div class="msg">
+	            <?php
+	                echo $_SESSION['msg'];
+	                unset($_SESSION['msg']);
+	            ?>
+            </div>
+	    <?php endif ?>
+	    
+		<form method="post" action="languageserver.php"> 
+		<input type="hidden" name="ID" value="<?php echo $ID; ?>">
+			<div class="input-group">
+				<label>Country Code</label>
+				<input type="text" name="CountryCode" maxlength="3" value="<?php echo $CountryCode; ?>">
+			</div>
+			<div class="input-group">
+				<label>Language</label>
+				<input type="text" name="Language" value="<?php echo $Language; ?>">
+			</div>
+			<div class="input-group">
+				<label>Official</label>
+				<input type="text" name="Official" maxlength="1" value="<?php echo $Official; ?>">
+			</div>
+			<div class="input-group">
+				<label>Percentage</label>
+				<input type="number" name="Percentage" step="0.1" value="<?php echo $Percentage; ?>">
+			</div>
+		
+			<div class="input-group">
+			    <?php if ($edit_state == false): ?>
+			        <button type="submit" name="save" class="btn">Save</button>
+			    <?php else: ?>
+			        <button type="submit" name="update" class="btn">Update</button>
+			    <?php endif ?>
+			</div>
+		</form>
+		
+		<div style="overflow-x:auto;">
+    		<table>
+    			<thead>
+    				<tr>
+						<th>Country Code</th>
+    					<th>Language</th>
+    					<th>Official</th>
+    					<th>Percentage</th>
+    					<th colspan="4">Action</th>
+    				</tr>
+    			</thead>
+    			<tbody>
+    			    <?php
+    			        while ($row = mysqli_fetch_array($results)) { 
+    			    ?>
+    			    
+    			            <tr>
+    		                    <td><?php echo $row['CountryCode']; ?></td>
+    					        <td><?php echo $row['Language']; ?></td>
+    		                    <td><?php echo $row['Official']; ?></td>
+    		                    <td><?php echo $row['Percentage']; ?></td>
+    				        	<td>
+    				        		<a class="edit_btn" href="language.php?edit=<?php echo $row['ID']; ?>">Edit</a    >
+    				        	</td>
+    					        <td>
+    				        		<a class="del_btn" href="languageserver.php?del=<?php echo $row['ID']; ?>">Delete</a>
+    				        	</td>
+    			           	</tr>   
+                    <?php } ?>
+    			</tbody>
+    		</table>
+    	</div>
+	</body>
+</html>
+
+<?php	
+    session_start();
+	//connect to database
+	$db = mysqli_connect('localhost', 'id9285368_worldassignment', 'gogo3210123', 'id9285368_world');
+	
+	//initialize variable
+	$CountryCode = "";
+	$Language = "";
+	$Official= "";
+	$Percentage = 0;
+	$ID = 0;
+	
+	$edit_state = false;
+	
+	//if save button is clicked
+	if (isset($_POST['save']))
+	{
+		$CountryCode = $_POST['CountryCode'];
+		$Language = $_POST['Language'];
+		$Official = $_POST['Official'];
+		$Percentage = $_POST['Percentage'];
+		
+	// insert from form to database
+		$query = "INSERT INTO Language (CountryCode, Language, Official, Percentage) VALUES ('$CountryCode','$Language','$Official','$Percentage');";
+		
+		mysqli_query($db, $query);
+		$_SESSION['msg'] = "Record Saved!";
+		header('location: language.php'); //redirect to index page after save
+	}
+	
+	//update records
+	if (isset($_POST['update'])) {
+	    $CountryCode = mysqli_real_escape_string($db,$_POST['CountryCode']);
+	    $Language = mysqli_real_escape_string($db,$_POST['Language']);
+	    $Official = mysqli_real_escape_string($db,$_POST['Official']);
+	    $Percentage = mysqli_real_escape_string($db,$_POST['Percentage']);
+	    $ID = mysqli_real_escape_string($db,$_POST['ID']);
+	   
+	    mysqli_query($db, "UPDATE Language SET CountryCode='$CountryCode', Language='$Language', Official='$Official', Percentage='$Percentage' WHERE ID='$ID' ");
+	   	$_SESSION['msg'] = "Record Updated!"; 
+	   	header('location: language.php'); //redirect to index page after update
+	}
+	
+	//delete records
+	if (isset($_GET['del'])) {
+	    $ID = $_GET['del'];
+	    
+	    mysqli_query($db, "DELETE FROM Language WHERE ID='".$ID."' ")
+	     or die("Error: ".mysqli_error($db));
+	    $_SESSION['msg'] = "Record Deleted!"; 
+	   	header('location: language.php'); //redirect to index page after update
+	}
+	
+	//retrieve records
+	$results = mysqli_query($db, "SELECT * FROM Language");
+?>
+body {
+	font-size: 19px;
+}
+
+table {
+	width: 100%;
+	margin: 5px auto;
+	border-collapse: collapse;
+	text-align: left;
+}
+
+tr {
+	border-bottom: 1px solid #cbcbcb;
+}
+
+th, td {
+	border: none;
+	height: 30px;
+	padding: 15px;
+}
+
+tr:hover {
+	background: #F5F5F5;
+}
+
+form {
+	width: 45%;
+	margin: 50px auto;
+	text-align: left;
+	padding: 20px;
+	border: 1px solid #bbbbbb;
+	border-radius: 5px;
+}
+
+.input-group {
+	margin: 10px 0px 10px 0px;
+}
+
+.input-group label {
+	display: block;
+	text-align: left;
+	margin: 3px;
+}
+
+.input-group input {
+	height: 30px;
+	width: 93%;
+	padding: 5px 10px;
+	font-size: 16px;
+	border-radius: 5px;
+	border: 1px solid gray;
+}
+
+.btn {
+	padding: 10px;
+	font-size: 15px;
+	color: white;
+	background: #5F9EA0;
+	border: none;
+	border-radius: 5px;
+}
